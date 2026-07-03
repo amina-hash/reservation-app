@@ -3,50 +3,129 @@ import api from "./services/api";
 
 function App() {
 
-const [services, setServices] = useState([]);
+    const [services, setServices] = useState([]);
+
+    const [form, setForm] = useState({
+        nom: "",
+        description: "",
+        prix: "",
+        duree: ""
+    });
+
+    const [editId, setEditId] = useState(null);
+
+    // GET all services
+    const fetchServices = () => {
+        api.get("/services")
+            .then(res => {
+                setServices(res.data);
+            })
+            .catch(err => console.log(err));
+    };
 
     useEffect(() => {
-
-        api.get("/services")
-            .then((response) => {
-                setServices(response.data);
-               
-
-            })
-            .catch((error) => {
-                console.error(error);
-            });
-
+        fetchServices();
     }, []);
 
+    // handle input
+    const handleChange = (e) => {
+        setForm({ ...form, [e.target.name]: e.target.value });
+    };
+
+    // CREATE or UPDATE
+    const handleSubmit = (e) => {
+        e.preventDefault();
+
+        if (editId) {
+            api.put(`/services/${editId}`, form)
+                .then(() => {
+                    setEditId(null);
+                    setForm({ nom: "", description: "", prix: "", duree: "" });
+                    fetchServices();
+                });
+        } else {
+            api.post("/services", form)
+                .then(() => {
+                    setForm({ nom: "", description: "", prix: "", duree: "" });
+                    fetchServices();
+                });
+        }
+    };
+
+    // DELETE
+    const handleDelete = (id) => {
+        api.delete(`/services/${id}`)
+            .then(() => fetchServices());
+    };
+
+    // EDIT
+    const handleEdit = (service) => {
+        setForm(service);
+        setEditId(service.id);
+    };
+
     return (
-        <div style={{ padding: "40px" }}>
+        <div style={{ padding: "30px" }}>
 
-            <h1>Nos Services</h1>
+            <h1>Gestion des Services</h1>
 
-            {services.map((service) => (
+            {/* FORM */}
+            <form onSubmit={handleSubmit} style={{ marginBottom: "20px" }}>
 
-                <div
-                    key={service.id}
-                    style={{
-                        border: "1px solid #ddd",
-                        padding: "20px",
-                        marginBottom: "15px",
-                        borderRadius: "10px"
-                    }}
-                >
-                    <h2>{service.nom}</h2>
+                <input
+                    name="nom"
+                    placeholder="Nom"
+                    value={form.nom}
+                    onChange={handleChange}
+                />
 
+                <input
+                    name="description"
+                    placeholder="Description"
+                    value={form.description}
+                    onChange={handleChange}
+                />
+
+                <input
+                    name="prix"
+                    placeholder="Prix"
+                    value={form.prix}
+                    onChange={handleChange}
+                />
+
+                <input
+                    name="duree"
+                    placeholder="Durée"
+                    value={form.duree}
+                    onChange={handleChange}
+                />
+
+                <button type="submit">
+                    {editId ? "Modifier" : "Ajouter"}
+                </button>
+
+            </form>
+
+            {/* LIST */}
+            {services.map(service => (
+                <div key={service.id} style={{
+                    border: "1px solid #ddd",
+                    padding: "10px",
+                    marginBottom: "10px"
+                }}>
+                    <h3>{service.nom}</h3>
                     <p>{service.description}</p>
+                    <p>{service.prix} DH</p>
+                    <p>{service.duree} min</p>
 
-                    <strong>{service.prix} DH</strong>
+                    <button onClick={() => handleEdit(service)}>
+                        Modifier
+                    </button>
 
-                    <br />
-
-                    <small>{service.duree} minutes</small>
-
+                    <button onClick={() => handleDelete(service.id)}>
+                        Supprimer
+                    </button>
                 </div>
-
             ))}
 
         </div>
