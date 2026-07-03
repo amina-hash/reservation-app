@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import api from "./services/api";
 
 function App() {
-
+console.log(import.meta.env.VITE_API_URL);
     const [services, setServices] = useState([]);
 
     const [form, setForm] = useState({
@@ -18,6 +18,7 @@ function App() {
     const fetchServices = () => {
         api.get("/services")
             .then(res => {
+              console.log(res.data);
                 setServices(res.data);
             })
             .catch(err => console.log(err));
